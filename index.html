@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BrainBurst Quiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0f;
+      --surface: #18181c;
+      --card: #1e1e24;
+      --accent: #f5c842;
+      --accent2: #ff5e5e;
+      --text: #f0f0f0;
+      --muted: #888;
+      --radius: 14px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background-image: radial-gradient(ellipse at 20% 20%, #2a2200 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 80%, #1a0000 0%, transparent 50%);
+    }
+
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 10vw, 6rem);
+      letter-spacing: 4px;
+      line-height: 1;
+      color: var(--accent);
+      text-shadow: 4px 4px 0 #6b4f00;
+      text-align: center;
+      animation: drop-in 0.6s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 8px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-align: center;
+      animation: drop-in 0.6s 0.1s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    @keyframes drop-in {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #app {
+      width: 100%;
+      max-width: 620px;
+      margin-top: 36px;
+    }
+
+    /* --- SCREENS --- */
+    .screen { display: none; }
+    .screen.active { display: block; animation: fade-up 0.4s ease both; }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* START SCREEN */
+    #start-screen { text-align: center; }
+
+    .category-picker {
+      margin: 28px 0;
+    }
+
+    .category-picker label {
+      display: block;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    #category-select {
+      width: 100%;
+      padding: 14px 18px;
+      background: var(--card);
+      color: var(--text);
+      border: 2px solid #333;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #category-select:focus { border-color: var(--accent); }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-block;
+      padding: 14px 36px;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+      box-shadow: 0 4px 0 #6b4f00;
+    }
+
+    .btn-primary:hover { box-shadow: 0 6px 0 #6b4f00; transform: translateY(-2px); }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--accent);
+      border: 2px solid var(--accent);
+      box-shadow: none;
+    }
+
+    .btn-outline:hover { background: rgba(245,200,66,0.08); }
+
+    /* QUIZ SCREEN */
+    #quiz-screen {}
+
+    .progress-bar-wrap {
+      background: #2a2a2a;
+      border-radius: 99px;
+      height: 6px;
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+
+    #progress-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width 0.5s ease;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    #question-text {
+      font-size: 1.25rem;
+      font-weight: 600;
+      line-height: 1.5;
+      background: var(--card);
+      border-left: 4px solid var(--accent);
+      padding: 20px;
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+    }
+
+    /* Name input */
+    .name-input-wrap {
+      margin-bottom: 20px;
+    }
+
+    .name-input-wrap label {
+      font-size: 0.8rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    #player-name-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--card);
+      color: var(--text);
+      border: 2px solid #333;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #player-name-input:focus { border-color: var(--accent); }
+
+    /* Answers */
+    #answers-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .answer-btn {
+      background: var(--card);
+      color: var(--text);
+      border: 2px solid #2e2e36;
+      border-radius: var(--radius);
+      padding: 16px 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      line-height: 1.4;
+    }
+
+    .answer-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      background: rgba(245,200,66,0.06);
+      transform: translateY(-2px);
+    }
+
+    .answer-btn.correct {
+      background: rgba(80,200,120,0.18);
+      border-color: #50c878;
+      color: #50c878;
+    }
+
+    .answer-btn.wrong {
+      background: rgba(255,94,94,0.15);
+      border-color: var(--accent2);
+      color: var(--accent2);
+    }
+
+    #feedback-msg {
+      margin-top: 16px;
+      min-height: 24px;
+      font-weight: 600;
+      font-size: 1rem;
+      text-align: center;
+      transition: opacity 0.3s;
+    }
+
+    #next-btn {
+      margin-top: 20px;
+      width: 100%;
+    }
+
+    /* RESULT SCREEN */
+    #result-screen { text-align: center; }
+
+    .result-card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 36px 28px;
+      border: 1px solid #2e2e36;
+      margin-bottom: 24px;
+    }
+
+    .score-big {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 5rem;
+      line-height: 1;
+      color: var(--accent);
+      text-shadow: 3px 3px 0 #6b4f00;
+    }
+
+    .score-label {
+      color: var(--muted);
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .grade-badge {
+      display: inline-block;
+      padding: 6px 20px;
+      border-radius: 99px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
+
+    .grade-A { background: rgba(80,200,120,0.2); color: #50c878; }
+    .grade-B { background: rgba(245,200,66,0.2); color: var(--accent); }
+    .grade-C { background: rgba(255,165,0,0.2); color: orange; }
+    .grade-F { background: rgba(255,94,94,0.2); color: var(--accent2); }
+
+    #result-name { font-size: 1.1rem; color: var(--muted); margin-bottom: 8px; }
+
+    .history-list {
+      text-align: left;
+      margin-top: 24px;
+    }
+
+    .history-list h3 {
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--surface);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+
+    .history-item span:last-child { color: var(--accent); font-weight: 600; }
+
+    .btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* Citation */
+    .citation {
+      margin-top: 32px;
+      font-size: 0.75rem;
+      color: #555;
+      text-align: center;
+      line-height: 1.6;
+      border-top: 1px solid #222;
+      padding-top: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>BrainBurst</h1>
+  <p class="subtitle">How much do you actually know?</p>
+
+  <div id="app">
+
+    <!-- START SCREEN -->
+    <div id="start-screen" class="screen active">
+      <div class="name-input-wrap" style="margin-top:0">
+        <label for="player-name-input">Your Name</label>
+        <input type="text" id="player-name-input" placeholder="Enter your name..." maxlength="24"/>
+      </div>
+
+      <div class="category-picker">
+        <label for="category-select">Choose a Category</label>
+        <select id="category-select">
+          <option value="all">All Categories</option>
+          <option value="science">Science</option>
+          <option value="history">History</option>
+          <option value="tech">Technology</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary" onclick="startQuiz()" style="width:100%">Start Quiz</button>
+    </div>
+
+    <!-- QUIZ SCREEN -->
+    <div id="quiz-screen" class="screen">
+      <div class="progress-bar-wrap">
+        <div id="progress-bar" style="width:0%"></div>
+      </div>
+      <div class="meta-row">
+        <span id="q-counter">Question 1 of 5</span>
+        <span id="score-counter">Score: 0</span>
+      </div>
+      <div id="question-text"></div>
+      <div id="answers-grid"></div>
+      <div id="feedback-msg"></div>
+      <button id="next-btn" class="btn btn-primary" onclick="nextQuestion()" style="display:none">Next →</button>
+    </div>
+
+    <!-- RESULT SCREEN -->
+    <div id="result-screen" class="screen">
+      <div class="result-card">
+        <div id="result-name"></div>
+        <div class="score-big" id="final-score"></div>
+        <div class="score-label">Final Score</div>
+        <div id="grade-badge" class="grade-badge"></div>
+        <p id="result-msg" style="color:var(--muted); font-size:0.95rem;"></p>
+        <div class="history-list" id="history-section"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="startQuiz()">Play Again</button>
+        <button class="btn btn-outline" onclick="showScreen('start-screen')">Change Category</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="citation">
+    <strong>AP CSP Create PT Citation</strong><br>
+    Code generated with assistance from Claude (Anthropic, 2025) via claude.ai.<br>
+    Student reviewed, tested, and can explain all logic, algorithms, and data structures used.
+  </div>
+
+<script>
+  // =============================================
+  // DATA: List of question objects (manages complexity)
+  // This list stores all quiz questions, their categories,
+  // answer choices, and correct answers.
+  // =============================================
+  const questions = [
+    { category: "science", q: "What is the powerhouse of the cell?", choices: ["Nucleus", "Mitochondria", "Ribosome", "Golgi body"], answer: "Mitochondria" },
+    { category: "science", q: "What planet is closest to the Sun?", choices: ["Venus", "Earth", "Mercury", "Mars"], answer: "Mercury" },
+    { category: "science", q: "What gas do plants absorb from the atmosphere?", choices: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"], answer: "Carbon Dioxide" },
+    { category: "history", q: "In what year did World War II end?", choices: ["1943", "1944", "1945", "1946"], answer: "1945" },
+    { category: "history", q: "Who was the first President of the United States?", choices: ["John Adams", "Thomas Jefferson", "Benjamin Franklin", "George Washington"], answer: "George Washington" },
+    { category: "history", q: "Which ancient wonder was located in Alexandria?", choices: ["Hanging Gardens", "Colossus of Rhodes", "The Great Lighthouse", "Temple of Artemis"], answer: "The Great Lighthouse" },
+    { category: "tech", q: "What does 'HTTP' stand for?", choices: ["HyperText Transfer Protocol", "High Transfer Text Protocol", "Hyperlink Text Tool Protocol", "Host Transfer Text Process"], answer: "HyperText Transfer Protocol" },
+    { category: "tech", q: "Which company created the JavaScript language?", choices: ["Microsoft", "Google", "Netscape", "Apple"], answer: "Netscape" },
+    { category: "tech", q: "What does 'RAM' stand for?", choices: ["Random Access Memory", "Read-only Active Memory", "Rapid Array Module", "Relative Access Mode"], answer: "Random Access Memory" },
+  ];
+
+  // =============================================
+  // STATE
+  // =============================================
+  let currentIndex = 0;
+  let score = 0;
+  let playerName = "";
+  let activeQuestions = [];
+  let scoreHistory = []; // List to store past scores (manages complexity)
+
+  // =============================================
+  // PROCEDURE: filterQuestions(category)
+  // Parameter: category (string)
+  // Uses ITERATION to loop through the questions list
+  // Uses SELECTION to filter by matching category
+  // Returns a filtered list of questions
+  // =============================================
+  function filterQuestions(category) {
+    let filtered = [];
+    for (let i = 0; i < questions.length; i++) {      // ITERATION
+      if (category === "all" || questions[i].category === category) {  // SELECTION
+        filtered.push(questions[i]);
+      }
+    }
+    return filtered;
+  }
+
+  // =============================================
+  // PROCEDURE: checkAnswer(selectedAnswer)
+  // Parameter: selectedAnswer (string)
+  // Checks if selected matches correct answer (SELECTION)
+  // Updates score and provides feedback (SEQUENCING)
+  // =============================================
+  function checkAnswer(selectedAnswer) {
+    const correct = activeQuestions[currentIndex].answer;
+    const buttons = document.querySelectorAll(".answer-btn");
+
+    // Disable all buttons
+    buttons.forEach(btn => btn.disabled = true);
+
+    if (selectedAnswer === correct) {             // SELECTION
+      score++;
+      document.getElementById("score-counter").textContent = "Score: " + score;
+      document.getElementById("feedback-msg").style.color = "#50c878";
+      document.getElementById("feedback-msg").textContent = "✓ Correct!";
+      // Highlight correct button
+      buttons.forEach(btn => {
+        if (btn.textContent === correct) btn.classList.add("correct");
+      });
+    } else {
+      document.getElementById("feedback-msg").style.color = "#ff5e5e";
+      document.getElementById("feedback-msg").textContent = "✗ Wrong! The answer was: " + correct;
+      // Highlight correct and wrong
+      buttons.forEach(btn => {
+        if (btn.textContent === correct) btn.classList.add("correct");
+        if (btn.textContent === selectedAnswer) btn.classList.add("wrong");
+      });
+    }
+
+    document.getElementById("next-btn").style.display = "block";
+  }
+
+  // =============================================
+  // PROCEDURE: getGrade(score, total)
+  // Parameter: score, total (numbers)
+  // Returns grade label and CSS class based on percentage
+  // =============================================
+  function getGrade(score, total) {
+    const pct = score / total;
+    if (pct >= 0.9) return { label: "A — Excellent!", cls: "grade-A" };
+    if (pct >= 0.7) return { label: "B — Good Job!", cls: "grade-B" };
+    if (pct >= 0.5) return { label: "C — Keep Practicing", cls: "grade-C" };
+    return { label: "F — Try Again!", cls: "grade-F" };
+  }
+
+  // =============================================
+  // CORE QUIZ LOGIC
+  // =============================================
+  function startQuiz() {
+    // INPUT: read player name and category from the page
+    playerName = document.getElementById("player-name-input").value.trim() || "Player";
+    const category = document.getElementById("category-select").value;
+
+    // Filter and shuffle questions using our procedure
+    activeQuestions = filterQuestions(category);
+    activeQuestions = activeQuestions.sort(() => Math.random() - 0.5).slice(0, 5);
+
+    currentIndex = 0;
+    score = 0;
+    document.getElementById("score-counter").textContent = "Score: 0";
+    showScreen("quiz-screen");
+    loadQuestion();
+  }
+
+  function loadQuestion() {
+    const q = activeQuestions[currentIndex];
+    const total = activeQuestions.length;
+
+    // Update progress bar (SEQUENCING)
+    document.getElementById("progress-bar").style.width = (currentIndex / total * 100) + "%";
+    document.getElementById("q-counter").textContent = `Question ${currentIndex + 1} of ${total}`;
+    document.getElementById("question-text").textContent = q.q;
+    document.getElementById("feedback-msg").textContent = "";
+    document.getElementById("next-btn").style.display = "none";
+
+    // Build answer buttons using ITERATION
+    const grid = document.getElementById("answers-grid");
+    grid.innerHTML = "";
+    for (let i = 0; i < q.choices.length; i++) {       // ITERATION
+      const btn = document.createElement("button");
+      btn.className = "answer-btn";
+      btn.textContent = q.choices[i];
+      btn.onclick = () => checkAnswer(q.choices[i]);   // calls procedure with parameter
+      grid.appendChild(btn);
+    }
+  }
+
+  function nextQuestion() {
+    currentIndex++;
+    if (currentIndex < activeQuestions.length) {   // SELECTION
+      loadQuestion();
+    } else {
+      showResults();
+    }
+  }
+
+  function showResults() {
+    // OUTPUT: display final score and grade
+    document.getElementById("progress-bar").style.width = "100%";
+
+    // Add this run to history list (using a list to manage complexity)
+    scoreHistory.push({ name: playerName, score: score, total: activeQuestions.length });
+
+    const grade = getGrade(score, activeQuestions.length);
+
+    document.getElementById("result-name").textContent = `Nice try, ${playerName}!`;
+    document.getElementById("final-score").textContent = score + " / " + activeQuestions.length;
+
+    const badge = document.getElementById("grade-badge");
+    badge.textContent = grade.label;
+    badge.className = "grade-badge " + grade.cls;
+
+    // Build history section using ITERATION
+    const historySection = document.getElementById("history-section");
+    if (scoreHistory.length > 1) {
+      let html = '<h3>Score History</h3>';
+      for (let i = 0; i < scoreHistory.length; i++) {  // ITERATION
+        const h = scoreHistory[i];
+        html += `<div class="history-item"><span>${h.name}</span><span>${h.score}/${h.total}</span></div>`;
+      }
+      historySection.innerHTML = html;
+    } else {
+      historySection.innerHTML = "";
+    }
+
+    showScreen("result-screen");
+  }
+
+  function showScreen(id) {
+    // ITERATION: loop through all screens and toggle active class
+    const screens = document.querySelectorAll(".screen");
+    screens.forEach(s => s.classList.remove("active"));    // ITERATION
+    document.getElementById(id).classList.add("active");
+  }
+</script>
+
+</body>
+</html>
